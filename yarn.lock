@@ -2979,7 +2979,7 @@ lines-and-columns@^1.1.6:
 
 lint-staged@^16.0.0:
   version "16.0.0"
-  resolved "https://registry.npmjs.org/lint-staged/-/lint-staged-16.0.0.tgz"
+  resolved "https://registry.yarnpkg.com/lint-staged/-/lint-staged-16.0.0.tgz#31826709bde6a62542431da3055f038e386a20db"
   integrity sha512-sUCprePs6/rbx4vKC60Hez6X10HPkpDJaGcy3D1NdwR7g1RcNkWL8q9mJMreOqmHBTs+1sNFp+wOiX9fr+hoOQ==
   dependencies:
     chalk "^5.4.1"
