@@ -23,9 +23,11 @@ module.exports = {
         'argsIgnorePattern': '^_',
         'varsIgnorePattern': '^_'
       }],
+      '@typescript-eslint/ban-types': 'off',
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'no-duplicate-imports': 'error',
       'no-unused-expressions': 'error',
+      'no-loss-of-precision': 'error',
       'prefer-const': 'error'
     }
 };

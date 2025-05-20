@@ -1,5 +1,6 @@
 // src/app.ts
 import express from 'express'
+import tickerRoutes from '@/routes/tickerRoutes'
 import marketRoutes from '@/routes/marketRoutes'
 import spreadRoutes from '@/routes/spreadRoutes'
 import errorHandler from '@/middlewares/errorHandler'
@@ -10,6 +11,7 @@ import logger from '@/config/logger'
 const app = express()
 app.use(express.json())
 app.use(pinoHttp({ logger: logger as any })) // eslint-disable-line @typescript-eslint/no-explicit-any
+app.use('/api', asyncHandler(tickerRoutes))
 app.use('/api', asyncHandler(marketRoutes))
 app.use('/api', asyncHandler(spreadRoutes))
 app.use(errorHandler)

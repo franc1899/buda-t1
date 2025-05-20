@@ -2,10 +2,9 @@
 import { Request, Response, NextFunction } from 'express'
 import budaService from '@/services/budaService'
 
-export const getTicker = async (req: Request, res: Response, next: NextFunction) => {
+export const getMarkets = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { market } = req.params
-    const result = await budaService.getTicker(market)
+    const result = await budaService.getMarkets()
     res.json(result)
   } catch (err) {
     next(err)

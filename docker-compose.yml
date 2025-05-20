@@ -1,20 +1,44 @@
-version: '3.9'
 services:
   api:
     build: .
     ports: ['3000:3000']
     env_file: .env
-    volumes: ['.:/app']
-    depends_on: [db]
+    volumes: 
+      - .:/app
+      - /app/node_modules
+      - ./prisma:/app/prisma
+      - ./scripts/start.sh:/app/start.sh
+    depends_on:
+      db:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
 
   db:
-    image: postgres:16-alpine
+    image: postgres:latest
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydb
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d mydb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  migrations:
+    build: .
+    command: sh -c "npx prisma migrate deploy && npx prisma generate"
+    env_file: .env
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - ./prisma:/app/prisma
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
-  db-data:
+  postgres_data:

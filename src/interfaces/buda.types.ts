@@ -22,3 +22,17 @@ export interface MarketDTO {
   maker_discount_tiers: Record<string, number>
   taker_discount_tiers: Record<string, number>
 }
+
+export interface MarketsResponseDTO {
+  markets: MarketDTO[]
+}
+
+export interface OrderBookDTO {
+  asks: [string, string][]
+  bids: [string, string][]
+  market_id: string
+}
+
+export interface OrderBookResponseDTO {
+  order_book: OrderBookDTO
+}

@@ -3,6 +3,6 @@ import { Router } from 'express'
 import * as marketController from '@/controllers/marketController'
 const router = Router()
 
-router.get('/ticker/:market', marketController.getTicker)
+router.get('/markets', marketController.getMarkets)
 
 export default router
