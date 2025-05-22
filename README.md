@@ -12,6 +12,7 @@ A Node.js application that integrates with the Buda.com API to fetch and analyze
 - Swagger documentation
 - Comprehensive test coverage
 - Docker Compose setup with PostgreSQL database
+- AWS ECS deployment ready
 
 ## Tech Stack
 
@@ -24,6 +25,7 @@ A Node.js application that integrates with the Buda.com API to fetch and analyze
 - Docker & Docker Compose
 - PostgreSQL
 - Prisma
+- AWS ECS, ALB, Route 53
 
 ## Prerequisites
 
@@ -31,6 +33,7 @@ A Node.js application that integrates with the Buda.com API to fetch and analyze
 - npm, yarn or pnpm
 - Access to Buda.com API
 - Docker and Docker Compose
+- AWS CLI configured with appropriate permissions
 
 ## Installation
 
@@ -80,6 +83,125 @@ The Docker Compose setup includes:
 - Environment variable management
 - Volume mounting for development
 - Health checks for database
+
+## Deployment
+
+### AWS ECS Deployment
+
+This application is configured for deployment on AWS ECS with the following architecture:
+
+1. **Container Registry (ECR)**
+   - Store Docker images
+   - Automated builds on push
+
+2. **ECS Cluster**
+   - Fargate launch type for serverless containers
+   - Auto-scaling based on CPU/Memory usage
+   - Task definitions for API and database
+
+3. **Application Load Balancer (ALB)**
+   - HTTPS termination
+   - Health checks
+   - SSL/TLS certificate management via ACM
+
+4. **Route 53**
+   - Custom domain management
+   - DNS routing to ALB
+   - Health checks
+
+5. **RDS**
+   - Managed PostgreSQL database
+   - Automated backups
+   - Multi-AZ deployment
+
+### Deployment Steps
+
+1. **Setup AWS Infrastructure**
+```bash
+# Create ECR repository
+aws ecr create-repository --repository-name buda-api
+
+# Create ECS cluster
+aws ecs create-cluster --cluster-name buda-cluster
+
+# Create RDS instance
+aws rds create-db-instance \
+    --db-instance-identifier buda-db \
+    --db-instance-class db.t3.micro \
+    --engine postgres \
+    --master-username admin \
+    --master-user-password <password> \
+    --allocated-storage 20
+```
+
+2. **Configure CI/CD Pipeline**
+   - Build and push Docker image to ECR
+   - Update ECS task definitions
+   - Deploy to ECS cluster
+
+3. **Setup Domain and SSL**
+   - Register domain in Route 53
+   - Request SSL certificate in ACM
+   - Configure ALB with HTTPS listener
+
+4. **Environment Variables**
+   - Store sensitive data in AWS Secrets Manager
+   - Configure ECS task definitions with environment variables
+
+### Infrastructure as Code
+
+The deployment infrastructure can be managed using:
+- AWS CDK
+- Terraform
+- CloudFormation
+
+Example AWS CDK stack structure:
+```typescript
+// infrastructure/lib/buda-stack.ts
+import * as cdk from 'aws-cdk-lib';
+import * as ecs from 'aws-cdk-lib/aws-ecs';
+import * as ecr from 'aws-cdk-lib/aws-ecr';
+import * as rds from 'aws-cdk-lib/aws-rds';
+
+export class BudaStack extends cdk.Stack {
+  constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
+    super(scope, id, props);
+
+    // Create VPC
+    const vpc = new ec2.Vpc(this, 'BudaVPC');
+
+    // Create ECS Cluster
+    const cluster = new ecs.Cluster(this, 'BudaCluster', {
+      vpc,
+    });
+
+    // Create RDS Instance
+    const database = new rds.DatabaseInstance(this, 'BudaDatabase', {
+      engine: rds.DatabaseInstanceEngine.postgres({
+        version: rds.PostgresEngineVersion.VER_14,
+      }),
+      vpc,
+      instanceType: ec2.InstanceType.of(
+        ec2.InstanceClass.T3,
+        ec2.InstanceSize.MICRO
+      ),
+    });
+
+    // Create ECS Service
+    const service = new ecs.FargateService(this, 'BudaService', {
+      cluster,
+      taskImageOptions: {
+        image: ecs.ContainerImage.fromEcrRepository(
+          ecr.Repository.fromRepositoryName(this, 'BudaRepo', 'buda-api')
+        ),
+        environment: {
+          DATABASE_URL: database.instanceEndpoint.socketAddress,
+        },
+      },
+    });
+  }
+}
+```
 
 ## API Endpoints
 
