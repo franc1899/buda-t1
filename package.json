@@ -8,12 +8,15 @@
     "build": "tsc",
     "start": "node -r tsconfig-paths/register dist/server.js",
     "test": "jest",
+    "test:coverage": "jest --coverage",
     "lint": "eslint 'src/**/*.ts'",
     "lint:fix": "npm run lint -- --fix",
     "prepare": "husky",
     "migrate:dev": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
-    "generate": "prisma generate"
+    "generate": "prisma generate",
+    "container:test": "docker-compose run --rm api npm run test",
+    "container:test:coverage": "docker-compose run --rm api npm run test:coverage"
   },
   "repository": {
     "type": "git",
