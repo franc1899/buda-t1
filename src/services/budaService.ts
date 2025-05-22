@@ -1,7 +1,8 @@
 // src/services/budaService.ts
 import axios from 'axios'
-import { BUDA_URL } from '@/config/dotenv'
 import { TickerDTO, MarketsResponseDTO, OrderBookResponseDTO } from '@/interfaces/buda.types'
+
+const BUDA_URL = process.env.BUDA_URL || 'https://www.buda.com/api/v2'
 
 export class BudaService {
   private client = axios.create({ baseURL: BUDA_URL })

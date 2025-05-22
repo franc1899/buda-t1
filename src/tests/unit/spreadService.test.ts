@@ -14,7 +14,6 @@ describe('Spread Service', () => {
 
   describe('getSpreadForMarket', () => {
     it('should calculate spread correctly from order book', async () => {
-      // Mock order book response
       const mockOrderBook = {
         order_book: {
           asks: [['1000', '1'], ['1100', '1']],
@@ -140,6 +139,64 @@ describe('Spread Service', () => {
         percentage: 100,
         alert: 'higher'
       })
+    })
+
+    it('should return same alert when spread is unchanged', async () => {
+      const mockOrderBook = {
+        order_book: {
+          asks: [['1000', '1']],
+          bids: [['900', '1']]
+        }
+      }
+      const mockLastSpread = {
+        market: 'btc-clp',
+        value: 100,
+        recordedAt: new Date()
+      }
+      ;(budaService.getOrderBook as jest.Mock).mockResolvedValue(mockOrderBook)
+      ;(getLastSpread as jest.Mock).mockResolvedValue(mockLastSpread)
+
+      const result = await compareWithLast('btc-clp')
+
+      expect(result).toEqual({
+        current: {
+          market: 'btc-clp',
+          value: 100,
+          recordedAt: expect.any(Date)
+        },
+        last: mockLastSpread,
+        diff: 0,
+        percentage: 0,
+        alert: 'same'
+      })
+    })
+
+    it('should return lower alert when spread decreased', async () => {
+      const mockOrderBook = {
+        order_book: {
+          asks: [['1000', '1']],
+          bids: [['900', '1']]
+        }
+      }
+      const mockLastSpread = {
+        market: 'btc-clp',
+        value: 150,
+        recordedAt: new Date()
+      }
+      ;(budaService.getOrderBook as jest.Mock).mockResolvedValue(mockOrderBook)
+      ;(getLastSpread as jest.Mock).mockResolvedValue(mockLastSpread)
+
+      const result = await compareWithLast('btc-clp')
+
+      expect(result.current).toEqual({
+        market: 'btc-clp',
+        value: 100,
+        recordedAt: expect.any(Date)
+      })
+      expect(result.last).toEqual(mockLastSpread)
+      expect(result.diff).toBe(-50)
+      expect(result.percentage).toBeCloseTo(-33.33, 2)
+      expect(result.alert).toBe('lower')
     })
   })
 })

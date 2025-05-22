@@ -6,12 +6,15 @@ describe('Ticker API', () => {
     const response = await request(app).get('/api/ticker/btc-clp')
     expect(response.status).toBe(200)
     expect(response.body).toEqual({
-      market: 'btc-clp',
-      lastPrice: expect.any(Number),
-      ask: expect.any(Number),
-      bid: expect.any(Number),
-      volume: expect.any(Number),
-      timestamp: expect.any(String)
+      ticker: {
+        market_id: 'BTC-CLP',
+        last_price: expect.any(Array),
+        min_ask: expect.any(Array),
+        max_bid: expect.any(Array),
+        volume: expect.any(Array),
+        price_variation_24h: expect.any(String),
+        price_variation_7d: expect.any(String),
+      }
     })
   })
 })

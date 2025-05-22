@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express'
-import { getMarkets } from '../../controllers/marketController'
-import budaService from '../../services/budaService'
+import { getMarkets } from '@/controllers/marketController'
+import budaService from '@/services/budaService'
 
-jest.mock('../../services/budaService')
+jest.mock('@/services/budaService')
 
 describe('Market Controller', () => {
   let mockRequest: Partial<Request>

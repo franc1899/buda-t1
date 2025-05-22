@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express'
-import { getTicker } from '../../controllers/tickerController'
-import budaService from '../../services/budaService'
+import { getTicker } from '@/controllers/tickerController'
+import budaService from '@/services/budaService'
 
-jest.mock('../../services/budaService')
+jest.mock('@/services/budaService')
 
 describe('Ticker Controller', () => {
   let mockRequest: Partial<Request>
@@ -19,7 +19,17 @@ describe('Ticker Controller', () => {
   })
 
   it('should return ticker data for a market', async () => {
-    const mockTicker = { ticker: { last_price: ['1000'] } }
+    const mockTicker = { 
+      ticker: { 
+        market_id: 'BTC-CLP',
+        last_price: ['1000'],
+        min_ask: ['1000'],
+        max_bid: ['1000'],
+        volume: ['1000'],
+        price_variation_24h: ['1000'],
+        price_variation_7d: ['1000']
+      } 
+    }
     mockRequest.params = { market: 'btc-clp' }
     ;(budaService.getTicker as jest.Mock).mockResolvedValue(mockTicker)
 

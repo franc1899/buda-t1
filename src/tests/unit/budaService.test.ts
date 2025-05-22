@@ -1,89 +1,141 @@
-import axios from 'axios';
-import { BudaService } from '../../services/budaService';
-import { BUDA_URL } from '../../config/dotenv';
+import axios, { type AxiosInstance } from 'axios'
 
-jest.mock('axios');
-const mockedAxios = axios;
+jest.mock('axios', () => {
+  const mockAxiosInstance: jest.Mocked<AxiosInstance> = {
+    get: jest.fn()
+  } as unknown as jest.Mocked<AxiosInstance>;
 
-describe('Buda Service', () => {
-  let budaService: BudaService;
+  return {
+    __esModule: true,
+    default: {
+      // axios.create() should always hand back the same mocked instance
+      create: jest.fn(() => mockAxiosInstance)
+    }
+  };
+});
 
+import budaService from '@/services/budaService'
+
+const mockedAxios = (axios.create as jest.Mock).mock.results[0].value as jest.Mocked<AxiosInstance>;
+
+describe('BudaService', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    budaService = new BudaService();
-  });
+    jest.clearAllMocks()
+    ;(axios.create as jest.Mock).mockReturnValue(mockedAxios)
+  })
 
   describe('getTicker', () => {
-    it('should fetch ticker data for a market', async () => {
-      const mockTicker = { ticker: { last_price: ['1000'] } };
-      mockedAxios.create.mockReturnValue({
-        get: jest.fn().mockResolvedValue({ data: mockTicker })
-      });
+    const mockTickerResponse = {
+      last_price: [50000000, 'CLP'],
+      market_id: 'BTC-CLP',
+      max_bid: [49900000, 'CLP'],
+      min_ask: [50100000, 'CLP'],
+      price_variation_24h: 2.5,
+      price_variation_7d: 5.0,
+      volume: [10.5, 'BTC']
+    }
 
-      const result = await budaService.getTicker('btc-clp');
+    it('should fetch ticker data for default market', async () => {
+      mockedAxios.get.mockResolvedValueOnce({ data: mockTickerResponse })
 
-      expect(result).toEqual(mockTicker);
-      expect(mockedAxios.create).toHaveBeenCalledWith({ baseURL: BUDA_URL });
-    });
+      const result = await budaService.getTicker()
 
-    it('should use default market if none provided', async () => {
-      const mockTicker = { ticker: { last_price: ['1000'] } };
-      mockedAxios.create.mockReturnValue({
-        get: jest.fn().mockResolvedValue({ data: mockTicker })
-      });
+      expect(mockedAxios.get).toHaveBeenCalledWith('/markets/btc-clp/ticker')
+      expect(result).toEqual(mockTickerResponse)
+    })
 
-      await budaService.getTicker();
+    it('should fetch ticker data for specified market', async () => {
+      mockedAxios.get.mockResolvedValueOnce({ data: mockTickerResponse })
 
-      expect(mockedAxios.create().get).toHaveBeenCalledWith('/markets/btc-clp/ticker');
-    });
-  });
+      const result = await budaService.getTicker('eth-clp')
+
+      expect(mockedAxios.get).toHaveBeenCalledWith('/markets/eth-clp/ticker')
+      expect(result).toEqual(mockTickerResponse)
+    })
+
+    it('should handle errors when fetching ticker', async () => {
+      const error = new Error('Network error')
+      mockedAxios.get.mockRejectedValueOnce(error)
+
+      await expect(budaService.getTicker()).rejects.toThrow('Network error')
+    })
+  })
 
   describe('getMarkets', () => {
+    const mockMarketsResponse = {
+      markets: [
+        {
+          id: 'BTC-CLP',
+          name: 'Bitcoin/Chilean Peso',
+          base_currency: 'BTC',
+          quote_currency: 'CLP',
+          minimum_order_amount: [0.001, 'BTC'],
+          taker_fee: 0.008,
+          maker_fee: 0.008,
+          max_orders_per_minute: 60,
+          maker_discount_percentage: 0,
+          taker_discount_percentage: 0,
+          maker_discount_tiers: {},
+          taker_discount_tiers: {}
+        }
+      ]
+    }
+
     it('should fetch all markets', async () => {
-      const mockMarkets = { markets: [{ id: 'BTC-CLP' }, { id: 'ETH-CLP' }] };
-      mockedAxios.create.mockReturnValue({
-        get: jest.fn().mockResolvedValue({ data: mockMarkets })
-      });
+      mockedAxios.get.mockResolvedValueOnce({ data: mockMarketsResponse })
 
-      const result = await budaService.getMarkets();
+      const result = await budaService.getMarkets()
 
-      expect(result).toEqual(mockMarkets);
-      expect(mockedAxios.create().get).toHaveBeenCalledWith('/markets');
-    });
-  });
+      expect(mockedAxios.get).toHaveBeenCalledWith('/markets')
+      expect(result).toEqual(mockMarketsResponse)
+    })
+
+    it('should handle errors when fetching markets', async () => {
+      const error = new Error('Network error')
+      mockedAxios.get.mockRejectedValueOnce(error)
+
+      await expect(budaService.getMarkets()).rejects.toThrow('Network error')
+    })
+  })
 
   describe('getOrderBook', () => {
-    it('should fetch order book for a market', async () => {
-      const mockOrderBook = {
-        order_book: {
-          asks: [['1000', '1']],
-          bids: [['900', '1']]
-        }
-      };
-      mockedAxios.create.mockReturnValue({
-        get: jest.fn().mockResolvedValue({ data: mockOrderBook })
-      });
+    const mockOrderBookResponse = {
+      order_book: {
+        asks: [
+          ['50100000', '1.5'],
+          ['50200000', '2.0']
+        ],
+        bids: [
+          ['49900000', '1.0'],
+          ['49800000', '2.5']
+        ],
+        market_id: 'BTC-CLP'
+      }
+    }
 
-      const result = await budaService.getOrderBook('btc-clp');
+    it('should fetch order book for default market', async () => {
+      mockedAxios.get.mockResolvedValueOnce({ data: mockOrderBookResponse })
 
-      expect(result).toEqual(mockOrderBook);
-      expect(mockedAxios.create().get).toHaveBeenCalledWith('/markets/btc-clp/order_book');
-    });
+      const result = await budaService.getOrderBook()
 
-    it('should use default market if none provided', async () => {
-      const mockOrderBook = {
-        order_book: {
-          asks: [['1000', '1']],
-          bids: [['900', '1']]
-        }
-      };
-      mockedAxios.create.mockReturnValue({
-        get: jest.fn().mockResolvedValue({ data: mockOrderBook })
-      });
+      expect(mockedAxios.get).toHaveBeenCalledWith('/markets/btc-clp/order_book')
+      expect(result).toEqual(mockOrderBookResponse)
+    })
 
-      await budaService.getOrderBook();
+    it('should fetch order book for specified market', async () => {
+      mockedAxios.get.mockResolvedValueOnce({ data: mockOrderBookResponse })
 
-      expect(mockedAxios.create().get).toHaveBeenCalledWith('/markets/btc-clp/order_book');
-    });
-  });
-}); 
+      const result = await budaService.getOrderBook('eth-clp')
+
+      expect(mockedAxios.get).toHaveBeenCalledWith('/markets/eth-clp/order_book')
+      expect(result).toEqual(mockOrderBookResponse)
+    })
+
+    it('should handle errors when fetching order book', async () => {
+      const error = new Error('Network error')
+      mockedAxios.get.mockRejectedValueOnce(error)
+
+      await expect(budaService.getOrderBook()).rejects.toThrow('Network error')
+    })
+  })
+})

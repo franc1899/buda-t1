@@ -28,7 +28,7 @@ describe('Spread API', () => {
     })
 
     it('should save spread when save=true', async () => {
-      await request(app)
+      const response = await request(app)
         .get('/api/spread/btc-clp?save=true')
         .expect(200)
 
@@ -39,6 +39,11 @@ describe('Spread API', () => {
       expect(savedSpread).toBeTruthy()
       expect(savedSpread?.market).toBe('btc-clp')
       expect(savedSpread?.value).toBeDefined()
+      expect(response.body).toEqual({
+        market: 'btc-clp',
+        value: expect.any(Number),
+        recordedAt: expect.any(String)
+      })
     })
   })
 
@@ -56,6 +61,22 @@ describe('Spread API', () => {
         recordedAt: expect.any(String)
       })
     })
+  })
+
+  describe('Get /spreads?save=true', () => {
+    it('should save spreads when save=true', async () => {
+      await request(app)
+        .get('/api/spreads?save=true')
+        .expect(200)
+
+      const savedSpreads = await prisma.spreadRecord.findMany()
+
+      expect(savedSpreads).toBeTruthy()
+      expect(savedSpreads.length).toBeGreaterThan(0)
+      expect(savedSpreads[0].value).toBeDefined()
+    })
+
+    
   })
 
   describe('GET /spread/:market/last', () => {
