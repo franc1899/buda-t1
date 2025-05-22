@@ -2,6 +2,7 @@
 import budaService from '@/services/budaService'
 import { saveSpread, getLastSpread } from '@/repositories/spreadRepository'
 import { Spread } from '@/domain/spread'
+import { BadRequestError } from '@/domain/errors'
 
 const _calc = (asks: [string, string][], bids: [string, string][]) => {
   if (asks.length === 0 || bids.length === 0) {
@@ -46,4 +47,21 @@ export const compareWithLast = async (market: string) => {
     percentage: (diff / Number(last.value)) * 100,
     alert: diff === 0 ? 'same' : diff > 0 ? 'higher' : 'lower'
   }
+}
+
+export const setSpreadValue = async (market: string, value: number) => {
+  if (!value) {
+    throw new BadRequestError('Invalid spread value')
+  }
+
+  await budaService.getMarket(market)
+
+  const spread: Spread = {
+    market,
+    value,
+    recordedAt: new Date()
+  }
+
+  await saveSpread(spread)
+  return spread
 }

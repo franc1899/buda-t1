@@ -138,4 +138,39 @@ describe('BudaService', () => {
       await expect(budaService.getOrderBook()).rejects.toThrow('Network error')
     })
   })
+
+  describe('getMarket', () => {
+    it('should fetch market data for default market', async () => {
+      const mockMarketResponse = {
+        market: {
+          id: 'BTC-CLP',
+          name: 'Bitcoin/Chilean Peso',
+          base_currency: 'BTC',
+          quote_currency: 'CLP',
+          minimum_order_amount: [0.001, 'BTC'],
+          taker_fee: 0.008,
+          maker_fee: 0.008,
+          max_orders_per_minute: 60,
+          maker_discount_percentage: 0,
+          taker_discount_percentage: 0,
+          maker_discount_tiers: {},
+          taker_discount_tiers: {}
+        }
+      }
+
+      mockedAxios.get.mockResolvedValueOnce({ data: mockMarketResponse })
+
+      const result = await budaService.getMarket()
+
+      expect(mockedAxios.get).toHaveBeenCalledWith('/markets/btc-clp')
+      expect(result).toEqual(mockMarketResponse)
+    })
+
+    it('should handle errors when fetching market', async () => {
+      const error = new Error('Network error')
+      mockedAxios.get.mockRejectedValueOnce(error)
+
+      await expect(budaService.getMarket()).rejects.toThrow('Network error')
+    })
+  })
 })

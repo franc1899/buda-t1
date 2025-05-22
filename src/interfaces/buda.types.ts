@@ -23,6 +23,10 @@ export interface MarketDTO {
   taker_discount_tiers: Record<string, number>
 }
 
+export interface MarketResponseDTO {
+  market: MarketDTO
+}
+
 export interface MarketsResponseDTO {
   markets: MarketDTO[]
 }

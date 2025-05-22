@@ -102,8 +102,8 @@ describe('SpreadController', () => {
     })
   })
 
-  describe('last', () => {
-    it('should compare with last spread', async () => {
+  describe('alert', () => {
+    it('should compare with alert spread', async () => {
       const mockComparison = {
         current: { market: 'BTC-CLP', value: 1000, recordedAt: new Date() },
         last: { market: 'BTC-CLP', value: 900, recordedAt: new Date() },
@@ -116,7 +116,7 @@ describe('SpreadController', () => {
 
       ;(spreadService.compareWithLast as jest.Mock).mockResolvedValue(mockComparison)
 
-      await spreadController.last(
+      await spreadController.alert(
         mockRequest as Request,
         mockResponse as Response,
         mockNext
@@ -133,7 +133,7 @@ describe('SpreadController', () => {
 
       ;(spreadService.compareWithLast as jest.Mock).mockRejectedValue(error)
 
-      await spreadController.last(
+      await spreadController.alert(
         mockRequest as Request,
         mockResponse as Response,
         mockNext

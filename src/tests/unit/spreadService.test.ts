@@ -1,7 +1,8 @@
 // tests/unit/spreadService.test.ts
-import { getSpreadForMarket, getSpreadForAllMarkets, compareWithLast } from '@/services/spreadService'
+import { getSpreadForMarket, getSpreadForAllMarkets, compareWithLast, setSpreadValue } from '@/services/spreadService'
 import budaService from '@/services/budaService'
 import { saveSpread, getLastSpread } from '@/repositories/spreadRepository'
+import { AxiosError, AxiosResponse } from 'axios'
 
 // Mock the dependencies
 jest.mock('@/services/budaService')
@@ -197,6 +198,39 @@ describe('Spread Service', () => {
       expect(result.diff).toBe(-50)
       expect(result.percentage).toBeCloseTo(-33.33, 2)
       expect(result.alert).toBe('lower')
+    })
+  })
+
+  describe('setSpreadValue', () => {
+    it('should throw BadRequestError when value is missing', async () => {
+      await expect(setSpreadValue('btc-clp', 0)).rejects.toThrow('Invalid spread value')
+    })
+
+    it('should throw NotFoundError when market does not exist', async () => {
+      const mockError = new AxiosError('Market not found')
+      mockError.response = { status: 404 } as AxiosResponse
+      ;(budaService.getMarket as jest.Mock).mockRejectedValue(mockError)
+
+      await expect(setSpreadValue('non-existent', 100)).rejects.toThrow('Market not found')
+    })
+
+    it('should save spread when market exists', async () => {
+      const mockMarket = { id: 'btc-clp' }
+      ;(budaService.getMarket as jest.Mock).mockResolvedValue(mockMarket)
+      ;(saveSpread as jest.Mock).mockResolvedValue(undefined)
+
+      const result = await setSpreadValue('btc-clp', 100)
+
+      expect(result).toEqual({
+        market: 'btc-clp',
+        value: 100,
+        recordedAt: expect.any(Date)
+      })
+      expect(saveSpread).toHaveBeenCalledWith({
+        market: 'btc-clp',
+        value: 100,
+        recordedAt: expect.any(Date)
+      })
     })
   })
 })

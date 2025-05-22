@@ -75,14 +75,12 @@ describe('Spread API', () => {
       expect(savedSpreads.length).toBeGreaterThan(0)
       expect(savedSpreads[0].value).toBeDefined()
     })
-
-    
   })
 
-  describe('GET /spread/:market/last', () => {
-    it('should return no-previous-data when no last spread exists', async () => {
+  describe('GET /spread/:market/alert', () => {
+    it('should return no-previous-data when no alert spread exists', async () => {
       const response = await request(app)
-        .get('/api/spread/btc-clp/last')
+        .get('/api/spread/btc-clp/alert')
         .expect(200)
 
       expect(response.body).toEqual({
@@ -95,15 +93,15 @@ describe('Spread API', () => {
       })
     })
 
-    it('should compare with last spread when it exists', async () => {
+    it('should compare with alert spread when it exists', async () => {
       // First save a spread
       await request(app)
         .get('/api/spread/btc-clp?save=true')
         .expect(200)
 
-      // Then compare with last
+      // Then compare with alert
       const response = await request(app)
-        .get('/api/spread/btc-clp/last')
+        .get('/api/spread/btc-clp/alert')
         .expect(200)
 
       expect(response.body).toEqual({
@@ -122,6 +120,50 @@ describe('Spread API', () => {
         percentage: expect.any(Number),
         alert: expect.stringMatching(/^(same|higher|lower)$/)
       })
+    })
+  })
+
+  describe('POST /spread/:market', () => {
+    it('should save a spread value successfully', async () => {
+      const response = await request(app)
+        .post('/api/spread/btc-clp')
+        .send({ value: 87194 })
+        .expect(200)
+
+      expect(response.body).toEqual({
+        market: 'btc-clp',
+        value: 87194,
+        recordedAt: expect.any(String)
+      })
+
+      const savedSpread = await prisma.spreadRecord.findFirst({
+        where: { market: 'btc-clp' }
+      })
+
+      expect(savedSpread).toBeTruthy()
+      expect(savedSpread?.market).toBe('btc-clp')
+      expect(Number(savedSpread?.value)).toBe(87194)
+    })
+
+    it('should return 400 for empty market', async () => {
+      await request(app)
+        .post('/api/spread/')
+        .send({ value: 87194 })
+        .expect(404)
+    })
+
+    it('should return 500 for missing value in request body', async () => {
+      await request(app)
+        .post('/api/spread/btc-clp')
+        .send({})
+        .expect(400)
+    })
+
+    it('should return 404 for missing market', async () => {
+      await request(app)
+        .post('/api/spread/no-market')
+        .send({ value: 87194 })
+        .expect(404)
     })
   })
 }) 

@@ -54,6 +54,61 @@ router.get('/spread/:market', spreadController.one)
 
 /**
  * @swagger
+ * /api/spread/{market}:
+ *   post:
+ *     summary: Set a spread value for a market
+ *     description: Manually set a spread value for a specific market
+ *     tags: [Spreads]
+ *     parameters:
+ *       - in: path
+ *         name: market
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Market identifier (e.g., BTC-CLP)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - value
+ *             properties:
+ *               value:
+ *                 type: number
+ *                 description: The spread value to set
+ *                 example: 87194
+ *     responses:
+ *       200:
+ *         description: Spread value set successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 market:
+ *                   type: string
+ *                   description: Market identifier
+ *                   example: "BTC-CLP"
+ *                 value:
+ *                   type: number
+ *                   description: Set spread value
+ *                   example: 87194
+ *                 recordedAt:
+ *                   type: string
+ *                   format: date-time
+ *                   description: When the spread was recorded
+ *                   example: "2025-05-22T12:00:00.000Z"
+ *       400:
+ *         description: Invalid spread value
+ *       500:
+ *         description: Server error
+ */
+router.post('/spread/:market', spreadController.setSpread)
+
+/**
+ * @swagger
  * /api/spreads:
  *   get:
  *     summary: Get all spreads
@@ -97,9 +152,9 @@ router.get('/spreads', spreadController.all)
 
 /**
  * @swagger
- * /api/spread/{market}/last:
+ * /api/spread/{market}/alert:
  *   get:
- *     summary: Get last spread for a specific market
+ *     summary: Get alert spread for a specific market
  *     description: Retrieve the most recent spread information for a given market
  *     tags: [Spreads]
  *     parameters:
@@ -171,6 +226,6 @@ router.get('/spreads', spreadController.all)
  *       500:
  *         description: Server error
  */
-router.get('/spread/:market/last', spreadController.last)
+router.get('/spread/:market/alert', spreadController.alert)
 
 export default router

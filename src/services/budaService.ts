@@ -1,6 +1,6 @@
 // src/services/budaService.ts
 import axios from 'axios'
-import { TickerDTO, MarketsResponseDTO, OrderBookResponseDTO } from '@/interfaces/buda.types'
+import { TickerDTO, MarketsResponseDTO, OrderBookResponseDTO, MarketResponseDTO } from '@/interfaces/buda.types'
 
 const BUDA_URL = process.env.BUDA_URL || 'https://www.buda.com/api/v2'
 
@@ -14,6 +14,11 @@ export class BudaService {
 
   async getMarkets(): Promise<MarketsResponseDTO> {
     const { data } = await this.client.get('/markets')
+    return data
+  }
+
+  async getMarket(market = 'btc-clp'): Promise<MarketResponseDTO> {
+    const { data } = await this.client.get(`/markets/${market}`)
     return data
   }
 

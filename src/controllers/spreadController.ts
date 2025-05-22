@@ -18,9 +18,18 @@ export const all = async (req: Request, res: Response, next: NextFunction) => {
   } catch (e) { next(e) }
 }
 
-export const last = async (req: Request, res: Response, next: NextFunction) => {
+export const alert = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = await spreadSvc.compareWithLast(req.params.market)
+    res.json(data)
+  } catch (e) { next(e) }
+}
+
+export const setSpread = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { value } = req.body
+    const { market } = req.params
+    const data = await spreadSvc.setSpreadValue(market, value)
     res.json(data)
   } catch (e) { next(e) }
 }
