@@ -56,7 +56,7 @@ router.get('/spread/:market', spreadController.one)
  * @swagger
  * /api/spread/{market}:
  *   post:
- *     summary: Set a spread value for a market
+ *     summary: Set a spread value for a market, this can be used to set an alert spread
  *     description: Manually set a spread value for a specific market
  *     tags: [Spreads]
  *     parameters:
