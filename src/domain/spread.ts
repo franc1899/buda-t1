@@ -4,4 +4,5 @@ export interface Spread {
     market: string
     value: number
     recordedAt: Date
+    active?: boolean
 }

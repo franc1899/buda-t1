@@ -228,4 +228,12 @@ router.get('/spreads', spreadController.all)
  */
 router.get('/spread/:market/alert', spreadController.alert)
 
+router.get('/spread/:market/alerts', spreadController.alerts)
+
+router.get('/spread/:market/alert/:id', spreadController.alertById)
+
+router.put('/spread/:id/status', spreadController.setSpreadStatus)
+
+router.get('/spread/:market/active', spreadController.getActiveSpreadsForMarket)
+
 export default router

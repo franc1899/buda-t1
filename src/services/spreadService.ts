@@ -1,8 +1,8 @@
 // src/services/spreadService.ts
 import budaService from '@/services/budaService'
-import { saveSpread, getLastSpread } from '@/repositories/spreadRepository'
+import spreadRepository from '@/repositories/spreadRepository'
 import { Spread } from '@/domain/spread'
-import { BadRequestError } from '@/domain/errors'
+import { BadRequestError, NotFoundError } from '@/domain/errors'
 
 const _calc = (asks: [string, string][], bids: [string, string][]) => {
   if (asks.length === 0 || bids.length === 0) {
@@ -22,7 +22,7 @@ export const getSpreadForMarket = async (market: string, persist = false) => {
     value: _calc(orderBook.asks, orderBook.bids),
     recordedAt: new Date()
   }
-  if (persist) await saveSpread(spread)
+  if (persist) await spreadRepository.saveSpread(spread)
   return spread
 }
 
@@ -37,7 +37,7 @@ export const getSpreadForAllMarkets = async (persist = false) => {
 
 export const compareWithLast = async (market: string) => {
   const current = await getSpreadForMarket(market, false)
-  const last    = await getLastSpread(market)
+  const last    = await spreadRepository.getLastSpread(market)
   if (!last) return { current, alert: 'no-previous-data' }
   const diff  = current.value - Number(last.value)
   return {
@@ -46,6 +46,38 @@ export const compareWithLast = async (market: string) => {
     diff,
     percentage: (diff / Number(last.value)) * 100,
     alert: diff === 0 ? 'same' : diff > 0 ? 'higher' : 'lower'
+  }
+}
+
+export const compareWithSavedSpreads = async (market: string) => {
+  const current = await getSpreadForMarket(market)
+  const savedSpreads = await spreadRepository.getSpreads(market)
+  if (!savedSpreads) return { current, alert: 'no-previous-data' }
+  const diffs = savedSpreads.map(s => current.value - Number(s.value))
+  const percentages = diffs.map(d => (d / Number(current.value)) * 100)
+  const alerts = diffs.map(d => d === 0 ? 'same' : d > 0 ? 'higher' : 'lower')
+  return {
+    current,
+    savedSpreads,
+    diffs,
+    percentages,
+    alerts
+  }
+}
+
+export const getSpreadAlertById = async (market: string, id: number) => {
+  const current = await getSpreadForMarket(market, false)
+  const savedSpread = await spreadRepository.getSpreadById(id)
+  if (!savedSpread) return { current, alert: 'no-previous-data' }
+  const diff = current.value - Number(savedSpread.value)
+  const percentage = (diff / Number(savedSpread.value)) * 100
+  const alert = diff === 0 ? 'same' : diff > 0 ? 'higher' : 'lower'
+  return {
+    current,
+    savedSpread,
+    diff,
+    percentage,
+    alert
   }
 }
 
@@ -62,6 +94,18 @@ export const setSpreadValue = async (market: string, value: number) => {
     recordedAt: new Date()
   }
 
-  await saveSpread(spread)
+  await spreadRepository.saveSpread(spread)
   return spread
+}
+
+export const setSpreadStatus = async (id: number, active: boolean) => {
+  const spread = await spreadRepository.getSpreadById(id)
+  if (!spread) throw new NotFoundError('Spread record not found')
+  const updatedSpread = await spreadRepository.updateSpreadStatus(id, active)
+  return updatedSpread
+}
+
+export const getActiveSpreadsForMarket = async (market: string) => {
+  const spreads = await spreadRepository.getActiveSpreadsForMarket(market)
+  return spreads
 }

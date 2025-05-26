@@ -18,4 +18,5 @@ model SpreadRecord {
   market     String   @db.VarChar(20)
   value      Decimal  @db.Decimal(20, 8)
   recordedAt DateTime @default(now())
+  active     Boolean  @default(true)
 }
